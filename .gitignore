@@ -1,0 +1,26 @@
+# --- Compiled Binaries & Objects ---
+*.o
+*.obj
+*.out
+bin/
+build/
+cache0.db
+run_tests
+
+# --- Xcode Specific ---
+# These are per-user settings and should not be shared
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.xcuserstate
+*.xccheckout
+*.xcscheme
+
+# --- macOS Specific ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- General ---
+# Ignore the persistent database file so you start fresh on other machines
+*.db
