@@ -1,0 +1,25 @@
+name: cache0 test CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Create Build Directory
+      run: mkdir -p build
+
+    - name: Compile Tests
+      run: |
+        g++ src/cache0.cpp test/test_cache0.cpp -o build/run_tests -std=c++17
+
+    - name: Run Tests
+      run: ./build/run_tests
