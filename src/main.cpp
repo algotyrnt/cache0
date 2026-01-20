@@ -9,14 +9,15 @@
 #include "../include/cache0.hpp"
 
 int main() {
+    std::cout << "[cache0] Initializing..." << std::endl;
+    
     Cache0 db;
     
-    std::cout << "[Cache0] Initializing..." << std::endl;
     db.put("user_id", "1024");
     
     auto result = db.get("user_id");
     if (result) {
-        std::cout << "[Cache0] Found: " << *result << std::endl;
+        std::cout << "[cache0] Found: " << *result << std::endl;
     }
     
     return 0;
