@@ -31,3 +31,6 @@ Cache0/
 ├── .github/            # The CI workflow
 └── README.md           # Readme File
 ```
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
