@@ -1,9 +1,8 @@
-//
-//  cache0.cpp
-//  cache0
-//
-//  Created by Punjitha Bandara on 2026-01-19.
-//
+/*
+ * Cache0 - A lightweight C++ Key-Value Store
+ * Copyright (c) 2026 Punjitha (algotyrnt)
+ * Licensed under the MIT License.
+ */
 
 #include <iostream>
 #include "../include/cache0.hpp"
@@ -33,7 +32,7 @@ bool Cache0::remove(const std::string& key) {
 
 void Cache0::save() {
     std::ofstream file(filename);
-    
+
     if (file.is_open()) {
         for (const auto& pair : store) {
             file << pair.first << "=" << pair.second << std::endl;
@@ -52,7 +51,7 @@ void Cache0::load() {
     if (file.is_open()) {
         while (std::getline(file, line)) {
             size_t delimiterPos = line.find('=');
-            
+
             if (delimiterPos != std::string::npos) {
                 std::string key = line.substr(0, delimiterPos);
                 std::string value = line.substr(delimiterPos + 1);
