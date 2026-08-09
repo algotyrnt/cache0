@@ -96,20 +96,21 @@ int main() {
 
 ## API Reference
 
-| Method                                               | Signature            | Description                                                                           |
-| :--------------------------------------------------- | :------------------- | :------------------------------------------------------------------------------------ |
-| `Cache0(const std::string& filename)`                | Explicit Constructor | Initializes cache and replays existing WAL log entries from `filename`.               |
-| `void put(const std::string& key, const T& value)`   | `void`               | Inserts or updates key and appends SET record to WAL log.                             |
-| `std::optional<T> get(const std::string& key) const` | `std::optional<T>`   | Retrieves value for `key` if present; returns `std::nullopt` if absent.               |
-| `bool remove(const std::string& key)`                | `bool`               | Removes `key` from cache and appends DEL record to WAL log.                           |
-| `bool contains(const std::string& key) const`        | `bool`               | Returns `true` if `key` exists in cache, `false` otherwise.                           |
-| `size_t size() const noexcept`                       | `size_t`             | Returns number of active key-value pairs in memory.                                   |
-| `bool empty() const noexcept`                        | `bool`               | Returns `true` if cache contains zero elements.                                       |
-| `void clear()`                                       | `void`               | Clears all elements from cache and compacts log.                                      |
-| `void flush() const`                                 | `void`               | Flushes active WAL stream buffer to disk; throws `std::runtime_error` on I/O failure. |
-| `void compact() const`                               | `void`               | Rewrites active entries into a fresh compacted log file to reclaim disk space.        |
-| `Cache0(Cache0&&) noexcept`                          | Move Constructor     | Transfers ownership of cache store and log file streams.                              |
-| `~Cache0()`                                          | Destructor           | Compacts log file and closes active streams.                                          |
+| Method                                               | Return Type / Operation | Description                                                                           |
+| :--------------------------------------------------- | :---------------------- | :------------------------------------------------------------------------------------ |
+| `Cache0(const std::string& filename)`                | Explicit Constructor    | Initializes cache and replays existing WAL log entries from `filename`.               |
+| `void put(const std::string& key, const T& value)`   | `void`                  | Inserts or updates key and appends SET record to WAL log.                             |
+| `std::optional<T> get(const std::string& key) const` | `std::optional<T>`      | Retrieves value for `key` if present; returns `std::nullopt` if absent.               |
+| `bool remove(const std::string& key)`                | `bool`                  | Removes `key` from cache and appends DEL record to WAL log.                           |
+| `bool contains(const std::string& key) const`        | `bool`                  | Returns `true` if `key` exists in cache, `false` otherwise.                           |
+| `size_t size() const noexcept`                       | `size_t`                | Returns number of active key-value pairs in memory.                                   |
+| `bool empty() const noexcept`                        | `bool`                  | Returns `true` if cache contains zero elements.                                       |
+| `void clear()`                                       | `void`                  | Clears all elements from cache and compacts log.                                      |
+| `void flush() const`                                 | `void`                  | Flushes active WAL stream buffer to disk; throws `std::runtime_error` on I/O failure. |
+| `void compact() const`                               | `void`                  | Rewrites active entries into a fresh compacted log file to reclaim disk space.        |
+| `Cache0(Cache0&&) noexcept`                          | Move Constructor        | Transfers ownership of cache store and log file streams.                              |
+| `Cache0& operator=(Cache0&&) noexcept`               | Move Assignment         | Transfers ownership of cache store and log file streams.                              |
+| `~Cache0()`                                          | Destructor              | Compacts log file and closes active streams.                                          |
 
 ---
 
@@ -126,7 +127,7 @@ target_link_libraries(your_target PRIVATE cache0)
 
 ### Option B: Manual Include
 
-Copy `include/algotyrnt/cache0.hpp` into your project's include directory and pass `-Iinclude` during compilation:
+Copy `include/algotyrnt/cache0.hpp` into your project's `include/algotyrnt/cache0.hpp` path and pass `-Iinclude` during compilation:
 
 ```bash
 g++ -std=c++17 -Iinclude main.cpp -o main
