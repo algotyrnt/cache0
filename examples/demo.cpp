@@ -19,8 +19,18 @@ int main() {
 
     User admin = {1, "SuperAdmin"};
     userDB.put("root", admin);
-    
     userDB.flush();
-    std::cout << "Library initialized successfully." << std::endl;
+
+    if (userDB.contains("root")) {
+        auto fetched = userDB.get("root");
+        if (fetched) {
+            std::cout << "User root found: ID=" << fetched->id << ", Role=" << fetched->role << std::endl;
+        }
+    }
+
+    std::cout << "Cache size: " << userDB.size() << " entry." << std::endl;
+
+    userDB.compact();
+    std::cout << "Library initialized and demonstrated successfully." << std::endl;
     return 0;
 }
