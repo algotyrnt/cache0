@@ -1,14 +1,28 @@
-# --- Compiled Binaries & Objects ---
+# Compiled Binaries, Objects & Libraries
 *.o
 *.obj
 *.out
+*.exe
+*.a
+*.so
+*.dylib
+*.dSYM/
 bin/
 build/
-cache0.db
-run_tests
 
-# --- Xcode Specific ---
-# These are per-user settings and should not be shared
+# Common Executable Names
+run_tests
+demo
+
+# Database Files
+*.db
+
+# Build System & IDE Artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+.vscode/
 xcuserdata/
 DerivedData/
 *.moved-aside
@@ -16,11 +30,7 @@ DerivedData/
 *.xccheckout
 *.xcscheme
 
-# --- macOS Specific ---
+# System Files
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# --- General ---
-# Ignore the persistent database file so you start fresh on other machines
-*.db
