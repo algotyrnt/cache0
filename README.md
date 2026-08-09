@@ -5,16 +5,17 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Type](https://img.shields.io/badge/type-Header--Only-orange.svg)
 
-Cache0 is a lightweight, header-only C++17 key-value store with automatic disk persistence. It provides a simple, template-based interface for storing and retrieving arbitrary data types with RAII file synchronization.
+Cache0 is a lightweight, persistent, header-only C++17 key-value store. It provides a template-based interface for storing and retrieving arbitrary data types backed by a Write-Ahead Log (WAL) persistence engine.
 
 ---
 
 ## Features
 
-- **Header-Only Library**: Drop `include/algotyrnt/cache0.hpp` into your project without extra compilation steps.
+- **Header-Only Library**: Drop `include/algotyrnt/cache0.hpp` into your project without external compilation steps.
 - **Generic & Type-Agnostic**: Store standard types (`std::string`, `int`, `double`) or custom user classes using C++ templates.
-- **Persistence & Flush**: Automatically loads data from disk on construction. The public `flush()` method provides an observable failure path by writing data to a temporary file and atomically replacing the target database, throwing `std::runtime_error` on write failures. Destructor persistence operates on a best-effort basis.
-- **Exception Safety**: Storage operations invoked via `flush()` or `load()` throw `std::runtime_error` on file I/O or deserialization errors, while destructor cleanup swallows exceptions to prevent crashes during stack unwinding.
+- **Write-Ahead Log (WAL) Engine**: Low-latency append-only log architecture (`#CACHE0_WAL_V1`) for fast writes, deletes, and crash recovery.
+- **Move Semantics & Exclusive Ownership**: Move-constructible and move-assignable to safely transfer ownership between objects. Copy operations are explicitly deleted to prevent duplicate file handles.
+- **Rich Container API**: Includes `contains()`, `size()`, `empty()`, `clear()`, `flush()`, and `compact()`.
 - **Namespaced**: All classes and templates are cleanly encapsulated under `namespace algotyrnt`.
 
 ---
@@ -35,16 +36,22 @@ int main() {
     cache.put("user_101", "Alice");
     cache.put("user_102", "Bob");
 
-    // Fetch value (returns std::optional<T>)
-    auto user = cache.get("user_101");
-    if (user.has_value()) {
+    // Container observers
+    std::cout << "Cache size: " << cache.size() << std::endl;
+    if (cache.contains("user_101")) {
+        auto user = cache.get("user_101");
         std::cout << "Found: " << *user << std::endl;
     }
 
     // Remove key
     cache.remove("user_102");
 
-    // State is saved automatically when 'cache' goes out of scope
+    // Explicitly flush log buffer to disk
+    cache.flush();
+
+    // Compact log file to reclaim disk space
+    cache.compact();
+
     return 0;
 }
 ```
@@ -89,13 +96,20 @@ int main() {
 
 ## API Reference
 
-| Method                                               | Signature          | Description                                                                    |
-| :--------------------------------------------------- | :----------------- | :----------------------------------------------------------------------------- |
-| `Cache0(const std::string& filename)`                | Constructor        | Initializes cache and loads existing key-value pairs from `filename`.          |
-| `void put(const std::string& key, const T& value)`   | `void`             | Inserts or updates the value associated with `key`.                            |
-| `std::optional<T> get(const std::string& key) const` | `std::optional<T>` | Retrieves value for `key` if present; returns `std::nullopt` if absent.        |
-| `bool remove(const std::string& key)`                | `bool`             | Deletes `key` from cache. Returns `true` if removed, `false` if key not found. |
-| `~Cache0()`                                          | Destructor         | Flushes all key-value entries to disk.                                         |
+| Method                                               | Signature            | Description                                                                           |
+| :--------------------------------------------------- | :------------------- | :------------------------------------------------------------------------------------ |
+| `Cache0(const std::string& filename)`                | Explicit Constructor | Initializes cache and replays existing WAL log entries from `filename`.               |
+| `void put(const std::string& key, const T& value)`   | `void`               | Inserts or updates key and appends SET record to WAL log.                             |
+| `std::optional<T> get(const std::string& key) const` | `std::optional<T>`   | Retrieves value for `key` if present; returns `std::nullopt` if absent.               |
+| `bool remove(const std::string& key)`                | `bool`               | Removes `key` from cache and appends DEL record to WAL log.                           |
+| `bool contains(const std::string& key) const`        | `bool`               | Returns `true` if `key` exists in cache, `false` otherwise.                           |
+| `size_t size() const noexcept`                       | `size_t`             | Returns number of active key-value pairs in memory.                                   |
+| `bool empty() const noexcept`                        | `bool`               | Returns `true` if cache contains zero elements.                                       |
+| `void clear()`                                       | `void`               | Clears all elements from cache and compacts log.                                      |
+| `void flush() const`                                 | `void`               | Flushes active WAL stream buffer to disk; throws `std::runtime_error` on I/O failure. |
+| `void compact() const`                               | `void`               | Rewrites active entries into a fresh compacted log file to reclaim disk space.        |
+| `Cache0(Cache0&&) noexcept`                          | Move Constructor     | Transfers ownership of cache store and log file streams.                              |
+| `~Cache0()`                                          | Destructor           | Compacts log file and closes active streams.                                          |
 
 ---
 
@@ -103,7 +117,7 @@ int main() {
 
 ### Option A: CMake (Recommended)
 
-Add this repository to your project directory or git submodule, then reference it in your `CMakeLists.txt`:
+Add this repository to your project directory, then reference it in your `CMakeLists.txt`:
 
 ```cmake
 add_subdirectory(Cache0)
@@ -153,7 +167,7 @@ g++ -std=c++17 -Iinclude examples/demo.cpp -o demo
 
 ```text
 Cache0/
-├── .github/workflows/   # CI/CD workflows for automated CMake testing
+├── .github/workflows/   # CI/CD workflows for automated testing and releases
 ├── examples/            # Usage demonstration code
 │   └── demo.cpp
 ├── include/             # Header-only library files
