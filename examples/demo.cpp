@@ -20,6 +20,7 @@ int main() {
     User admin = {1, "SuperAdmin"};
     userDB.put("root", admin);
     
-    std::cout << "Library initialized and data saved successfully." << std::endl;
+    userDB.flush();
+    std::cout << "Library initialized successfully." << std::endl;
     return 0;
 }
