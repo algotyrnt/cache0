@@ -1,41 +1,41 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+    push:
+        tags:
+            - "v*"
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
+    create-release:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
 
-      - name: Configure CMake
-        run: cmake -S . -B build
+            - name: Configure CMake
+              run: cmake -S . -B build
 
-      - name: Build Targets
-        run: cmake --build build
+            - name: Build Targets
+              run: cmake --build build
 
-      - name: Run Test Suite
-        run: cd build && ctest --output-on-failure
+            - name: Run Test Suite
+              run: cd build && ctest --output-on-failure
 
-      - name: Package Header Assets
-        run: |
-          mkdir -p dist
-          tar -czvf dist/cache0-header.tar.gz -C include algotyrnt
+            - name: Package Header Assets
+              run: |
+                  mkdir -p dist
+                  tar -czvf dist/cache0-header.tar.gz -C include algotyrnt
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            include/algotyrnt/cache0.hpp
-            dist/cache0-header.tar.gz
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: |
+                      include/algotyrnt/cache0.hpp
+                      dist/cache0-header.tar.gz
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

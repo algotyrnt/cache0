@@ -1,24 +1,24 @@
 name: Cache0 CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+    build-and-test:
+        runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
 
-    - name: Configure CMake
-      run: cmake -S . -B build
+            - name: Configure CMake
+              run: cmake -S . -B build
 
-    - name: Build
-      run: cmake --build build
+            - name: Build
+              run: cmake --build build
 
-    - name: Run Tests
-      run: cd build && ctest --output-on-failure
+            - name: Run Tests
+              run: cd build && ctest --output-on-failure
