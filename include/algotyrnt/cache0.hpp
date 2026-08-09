@@ -68,6 +68,10 @@ private:
         }
         wal_stream << "1 " << key.size() << " " << valStr.size() << "\n";
         wal_stream << key << valStr << "\n";
+        wal_stream.flush();
+        if (wal_stream.fail()) {
+            throw std::runtime_error("Cache0 Error: Failed to write SET record to WAL -> " + db_filename);
+        }
     }
 
     void append_del_record(const std::string& key) const {
@@ -77,6 +81,10 @@ private:
         }
         wal_stream << "2 " << key.size() << "\n";
         wal_stream << key << "\n";
+        wal_stream.flush();
+        if (wal_stream.fail()) {
+            throw std::runtime_error("Cache0 Error: Failed to write DEL record to WAL -> " + db_filename);
+        }
     }
 
     void load() {
@@ -96,9 +104,25 @@ private:
 
         std::string header;
         if (!std::getline(check_stream, header)) {
+            bool is_eof = check_stream.eof();
             check_stream.close();
-            open_wal_append();
-            return;
+            if (is_eof) {
+                std::ofstream init_file(db_filename, std::ios::binary);
+                if (!init_file.is_open()) {
+                    throw std::runtime_error("Cache0 Error: Could not initialize database header -> " + db_filename);
+                }
+                init_file << "#CACHE0_WAL_V1\n";
+                init_file.flush();
+                if (init_file.fail()) {
+                    init_file.close();
+                    throw std::runtime_error("Cache0 Error: Failed to write database header -> " + db_filename);
+                }
+                init_file.close();
+                open_wal_append();
+                return;
+            } else {
+                throw std::runtime_error("Cache0 Error: Failed to read database header from -> " + db_filename);
+            }
         }
 
         if (header != "#CACHE0_WAL_V1") {
@@ -111,7 +135,9 @@ private:
             if (line.empty()) continue;
             std::stringstream ss(line);
             int opCode = 0;
-            if (!(ss >> opCode)) continue;
+            if (!(ss >> opCode)) {
+                throw std::runtime_error("Cache0 Error: Unreadable operation header in WAL -> " + db_filename);
+            }
 
             if (opCode == 1) {
                 size_t keyLen = 0, valLen = 0;
@@ -127,7 +153,9 @@ private:
                     throw std::runtime_error("Cache0 Error: Incomplete value in WAL -> " + db_filename);
                 }
                 char nl;
-                check_stream.get(nl);
+                if (!check_stream.get(nl) || nl != '\n') {
+                    throw std::runtime_error("Cache0 Error: Missing line delimiter after SET record in WAL -> " + db_filename);
+                }
 
                 try {
                     store[key] = deserialize_value(valStr);
@@ -144,8 +172,12 @@ private:
                     throw std::runtime_error("Cache0 Error: Incomplete key in WAL -> " + db_filename);
                 }
                 char nl;
-                check_stream.get(nl);
+                if (!check_stream.get(nl) || nl != '\n') {
+                    throw std::runtime_error("Cache0 Error: Missing line delimiter after DEL record in WAL -> " + db_filename);
+                }
                 store.erase(key);
+            } else {
+                throw std::runtime_error("Cache0 Error: Unknown opCode " + std::to_string(opCode) + " in WAL -> " + db_filename);
             }
         }
 
@@ -233,8 +265,9 @@ public:
     }
 
     void put(const std::string& key, const T& value) {
+        std::string valStr = serialize_value(value);
+        append_set_record(key, valStr);
         store[key] = value;
-        append_set_record(key, serialize_value(value));
     }
 
     std::optional<T> get(const std::string& key) const {
@@ -248,8 +281,8 @@ public:
     bool remove(const std::string& key) {
         auto it = store.find(key);
         if (it != store.end()) {
-            store.erase(it);
             append_del_record(key);
+            store.erase(it);
             return true;
         }
         return false;
@@ -268,8 +301,14 @@ public:
     }
 
     void clear() {
+        auto old_store = store;
         store.clear();
-        compact();
+        try {
+            compact();
+        } catch (...) {
+            store = std::move(old_store);
+            throw;
+        }
     }
 };
 
