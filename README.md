@@ -13,8 +13,8 @@ Cache0 is a lightweight, header-only C++17 key-value store with automatic disk p
 
 - **Header-Only Library**: Drop `include/algotyrnt/cache0.hpp` into your project without extra compilation steps.
 - **Generic & Type-Agnostic**: Store standard types (`std::string`, `int`, `double`) or custom user classes using C++ templates.
-- **Automatic RAII Persistence**: Automatically loads data from disk on construction and flushes modified state to disk on destruction.
-- **Exception Safety**: Safe file I/O operations throwing `std::runtime_error` on storage failures.
+- **Persistence & Flush**: Automatically loads data from disk on construction. The public `flush()` method provides an observable failure path by writing data to a temporary file and atomically replacing the target database, throwing `std::runtime_error` on write failures. Destructor persistence operates on a best-effort basis.
+- **Exception Safety**: Storage operations invoked via `flush()` or `load()` throw `std::runtime_error` on file I/O or deserialization errors, while destructor cleanup swallows exceptions to prevent crashes during stack unwinding.
 - **Namespaced**: All classes and templates are cleanly encapsulated under `namespace algotyrnt`.
 
 ---
