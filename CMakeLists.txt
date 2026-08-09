@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(Cache0 VERSION 1.1.0 LANGUAGES CXX)
+project(Cache0 VERSION 1.0.0 LANGUAGES CXX)
 
 # 1. Define Cache0 as a Header-Only (INTERFACE) library
 add_library(cache0 INTERFACE)
